@@ -23,10 +23,10 @@ public class LightSwitchNode extends Node {
     private boolean turnedOn;
     private boolean requestedState;
 
-    public LightSwitchNode(int id, NodeLocation nodeLocation, String description, NodeCommunicator nodeCommunicator, List<Notifier> notifiers, boolean turnedOn, boolean requestedState) {
+    public LightSwitchNode(int id, NodeLocation nodeLocation, String description, NodeCommunicator nodeCommunicator, List<Notifier> notifiers) {
         super(id, nodeLocation, nodeCommunicator, notifiers, description);
-        this.turnedOn = turnedOn;
-        this.requestedState = requestedState;
+        this.turnedOn = false;
+        this.requestedState = false;
     }
 
     public NodeInfo getNodeInfo() {
