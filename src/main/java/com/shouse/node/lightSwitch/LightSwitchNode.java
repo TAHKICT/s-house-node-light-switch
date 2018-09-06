@@ -6,7 +6,7 @@ import shouse.core.api.Notifier;
 import shouse.core.common.SystemConstants;
 import shouse.core.communication.NodeCommunicator;
 import shouse.core.communication.Packet;
-import shouse.core.node.Node;
+import shouse.core.node.ExecutableNode;
 import shouse.core.node.NodeInfo;
 import shouse.core.node.NodeLocation;
 import shouse.core.node.request.Request;
@@ -17,7 +17,7 @@ import shouse.core.node.response.ResponseStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class LightSwitchNode extends Node {
+public class LightSwitchNode extends ExecutableNode {
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private boolean turnedOn;
@@ -25,6 +25,7 @@ public class LightSwitchNode extends Node {
 
     public LightSwitchNode(int id, NodeLocation nodeLocation, String description, NodeCommunicator nodeCommunicator, List<Notifier> notifiers) {
         super(id, nodeLocation, nodeCommunicator, notifiers, description);
+        setTypeName(this.getClass().getSimpleName());
         this.turnedOn = false;
         this.requestedState = false;
     }
@@ -41,12 +42,18 @@ public class LightSwitchNode extends Node {
             return nodeIsNotActiveResponse();
         }
 
+        if(isHasControlCommand()){
+            return alreadyHasControlCommand();
+        }
+
         if (request.getBody().getParameter("requestedState").equals("on")) {
             requestedState = true;
+            setHasControlCommand(true);
             LOGGER.info("requestedSwitchState: on");
         }
         else if (request.getBody().getParameter("requestedState").equals("off")) {
             requestedState = false;
+            setHasControlCommand(true);
             LOGGER.info("requestedSwitchState: off");
         }
         else {
@@ -96,13 +103,14 @@ public class LightSwitchNode extends Node {
         //Executed task detection
         LOGGER.info("Executed task detected. Requested switch state:"+requestedState);
 
-        if ((packet.getData().get("turnedOn") != null) &&
-                ((packet.getData().get("turnedOn").equals("true") && requestedState == true)
+        if ((packet.getData().get("state") != null) &&
+                ((packet.getData().get("state").equals("true") && requestedState == true)
                             ||
-                            (packet.getData().get("turnedOn").equals("false") &&  requestedState == false)
+                            (packet.getData().get("state").equals("false") &&  requestedState == false)
                 )
         ){
             turnedOn = requestedState;
+            setHasControlCommand(false);
             LOGGER.info(String.format("Executed successfully"));
 
             Response response = new Response(ResponseStatus.SUCCESS);
@@ -117,9 +125,5 @@ public class LightSwitchNode extends Node {
 
     public boolean isTurnedOn() {
         return turnedOn;
-    }
-
-    public boolean isInProcess(){
-        return turnedOn == requestedState;
     }
 }

@@ -12,7 +12,7 @@ public class LightSwitchNodeInfo extends NodeInfo {
                 lightSwitchNode.getNodeLocation(),
                 lightSwitchNode.getDescription());
         this.turnedOn = lightSwitchNode.isTurnedOn();
-        this.inProcess = lightSwitchNode.isInProcess();
+        this.inProcess = lightSwitchNode.isHasControlCommand();
     }
 
     public boolean isTurnedOn() {
