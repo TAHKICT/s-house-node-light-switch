@@ -100,23 +100,30 @@ public class LightSwitchNode extends ExecutableNode {
             return;
         }
 
-        //Executed task detection
-        LOGGER.info("Executed task detected. Requested switch state:"+requestedState);
+        LOGGER.info("Try to detect switch event...");
 
-        if ((packet.getData().get("state") != null) &&
-                ((packet.getData().get("state").equals("true") && requestedState == true)
-                            ||
-                            (packet.getData().get("state").equals("false") &&  requestedState == false)
-                )
+        if ((packet.getData().get("switched") != null) &&
+                (packet.getData().get("switched").equals("1") ||
+                            packet.getData().get("switched").equals("0"))
         ){
-            turnedOn = requestedState;
-            setHasControlCommand(false);
-            LOGGER.info(String.format("Executed successfully"));
+            if (isHasControlCommand()) {
+                LOGGER.info("Command executed");
+                turnedOn = requestedState;
+                setHasControlCommand(false);
+            } else {
+                LOGGER.info("Manual switch event");
+                if (packet.getData().get("switched").equals("1"))
+                    turnedOn = true;
+                else
+                    turnedOn = false;
+            }
 
             Response response = new Response(ResponseStatus.SUCCESS);
             response.put(SystemConstants.executionStatus, ExecutionStatus.READY);
-            response.put(SystemConstants.nodeId, getId());
+            response.put("nodeId", getId());
             response.put("turnedOn", turnedOn);
+            response.put(SystemConstants.topic, SystemConstants.nodeEventTopic);
+            response.put(Request.NODE_TYPE_NAME, this.getClass().getSimpleName());
             getNotifiers().stream().filter(notifier -> notifier != null).forEach(notifier -> notifier.sendResponse(response));
         }
         else
